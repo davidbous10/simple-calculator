@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Two Calculators</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      background: #1B2A41;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+    }
+
+    .calc-wrap { text-align: center; }
+
+    .calc-label {
+      color: #A3BBD3;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .calculator {
+      width: 300px;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Calculator 1: green jungle theme (fitting, for the monkey) */
+    .calculator.jungle { background: #EAF5EC; }
+    .jungle .display { border-color: #BFDEC6; }
+    .jungle .history { color: #7FA98A; }
+    .jungle .current { color: #1E4428; }
+    .jungle button { color: #1E4428; border-color: #BFDEC6; }
+    .jungle button:hover { background: #DCEEDF; }
+    .jungle button.op { background: #2E8B57; color: #fff; border: none; }
+    .jungle button.op:hover { background: #256F46; }
+    .jungle button.util { background: #BFDEC6; border: none; }
+    .jungle button.util:hover { background: #ABD1B4; }
+    .jungle button.equals { background: #1E5E38; color: #fff; border: none; }
+    .jungle button.equals:hover { background: #174A2C; }
+
+    /* Calculator 2: purple robot theme (fitting, for the bot) */
+    .calculator.robot { background: #F0ECFA; }
+    .robot .display { border-color: #D4C8EE; }
+    .robot .history { color: #9C8BC4; }
+    .robot .current { color: #2E1D5B; }
+    .robot button { color: #2E1D5B; border-color: #D4C8EE; }
+    .robot button:hover { background: #E4DCF5; }
+    .robot button.op { background: #6C4AB6; color: #fff; border: none; }
+    .robot button.op:hover { background: #583A99; }
+    .robot button.util { background: #D4C8EE; border: none; }
+    .robot button.util:hover { background: #C4B4E5; }
+    .robot button.equals { background: #43297F; color: #fff; border: none; }
+    .robot button.equals:hover { background: #351F66; }
+
+    .display {
+      background: #FFFFFF;
+      border: 1px solid;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      text-align: right;
+      min-height: 84px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .history {
+      min-height: 16px;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .current {
+      font-size: 30px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      word-wrap: break-word;
+      line-height: 1.2;
+    }
+
+    /* Easter egg display styles */
+    .current.egg-text {
+      font-size: 17px;
+      font-style: italic;
+      text-align: center;
+    }
+    .current.egg-monkey {
+      font-size: 52px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    button {
+      padding: 14px 0;
+      font-size: 17px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #FFFFFF;
+      border: 1px solid;
+      transition: transform 0.05s ease, background 0.1s ease;
+    }
+
+    button:active { transform: scale(0.96); }
+    button.equals { grid-column: span 2; }
+  </style>
+</head>
+<body>
+
+  <div class="calc-wrap">
+    <div class="calc-label">Calculator 1 — try 3 × 3</div>
+    <div id="calc1"></div>
+  </div>
+
+  <div class="calc-wrap">
+    <div class="calc-label">Calculator 2 — try 1 + 1</div>
+    <div id="calc2"></div>
+  </div>
+
+  <script>
+    const OP_SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+    /*
+      buildCalculator(container, theme, easterEgg)
+
+      easterEgg is an object describing this calculator's trap:
+        { op: which operator triggers it,
+          a, b: the two numbers,
+          result: what to show instead of the answer,
+          style: CSS class for how to display it }
+
+      Each calculator gets its OWN egg — same machine, different prank.
+    */
+    function buildCalculator(container, theme, egg) {
+      const calc = document.createElement('div');
+      calc.className = 'calculator ' + theme;
+      calc.innerHTML = `
+        <div class="display">
+          <div class="history"></div>
+          <div class="current">0</div>
+        </div>
+        <div class="keys">
+          <button class="util" data-action="clear">C</button>
+          <button class="util" data-action="delete">⌫</button>
+          <button class="util" data-action="percent">%</button>
+          <button class="op" data-op="/">÷</button>
+          <button data-num="7">7</button>
+          <button data-num="8">8</button>
+          <button data-num="9">9</button>
+          <button class="op" data-op="*">×</button>
+          <button data-num="4">4</button>
+          <button data-num="5">5</button>
+          <button data-num="6">6</button>
+          <button class="op" data-op="-">−</button>
+          <button data-num="1">1</button>
+          <button data-num="2">2</button>
+          <button data-num="3">3</button>
+          <button class="op" data-op="+">+</button>
+          <button data-num="0">0</button>
+          <button data-num=".">.</button>
+          <button class="equals" data-action="equals">=</button>
+        </div>
+      `;
+      container.appendChild(calc);
+
+      const historyEl = calc.querySelector('.history');
+      const currentEl = calc.querySelector('.current');
+
+      let current = '0', previous = null, operator = null, justEvaluated = false;
+      let eggActive = false;
+
+      function compute(a, op, b) {
+        a = parseFloat(a); b = parseFloat(b);
+
+        // ---- THE TRAP ----
+        if (op === egg.op && a === egg.a && b === egg.b) {
+          eggActive = true;
+          return egg.result;
+        }
+
+        let r;
+        switch (op) {
+          case '+': r = a + b; break;
+          case '-': r = a - b; break;
+          case '*': r = a * b; break;
+          case '/': if (b === 0) return 'Error'; r = a / b; break;
+        }
+        return String(Math.round(r * 1e10) / 1e10);
+      }
+
+      function update() {
+        currentEl.className = 'current' + (eggActive ? ' ' + egg.style : '');
+        currentEl.textContent = current;
+        historyEl.textContent =
+          previous !== null && operator ? `${previous} ${OP_SYMBOLS[operator]}` : '';
+      }
+
+      function resetIfEgg() {
+        if (eggActive || current === 'Error') {
+          current = '0'; eggActive = false;
+        }
+      }
+
+      calc.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+
+        if (btn.dataset.num !== undefined) {
+          const d = btn.dataset.num;
+          if (justEvaluated) { resetIfEgg(); current = '0'; justEvaluated = false; }
+          resetIfEgg();
+          if (d === '.') {
+            if (!current.includes('.')) current += '.';
+          } else {
+            current = current === '0' ? d : current + d;
+          }
+          update();
+        } else if (btn.dataset.op) {
+          resetIfEgg();
+          if (operator && previous !== null && !justEvaluated) {
+            current = compute(previous, operator, current);
+            if (eggActive) { update(); previous = null; operator = null; justEvaluated = true; return; }
+          }
+          previous = current;
+          operator = btn.dataset.op;
+          current = '0';
+          justEvaluated = false;
+          update();
+          currentEl.textContent = previous;
+        } else if (btn.dataset.action === 'equals') {
+          if (operator === null || previous === null) return;
+          const expr = `${previous} ${OP_SYMBOLS[operator]} ${current} =`;
+          current = compute(previous, operator, current);
+          previous = null; operator = null; justEvaluated = true;
+          update();
+          historyEl.textContent = expr;
+        } else if (btn.dataset.action === 'clear') {
+          current = '0'; previous = null; operator = null;
+          justEvaluated = false; eggActive = false;
+          update();
+        } else if (btn.dataset.action === 'delete') {
+          if (justEvaluated || eggActive || current === 'Error') {
+            resetIfEgg(); current = '0'; justEvaluated = false;
+          } else {
+            current = current.length > 1 ? current.slice(0, -1) : '0';
+          }
+          update();
+        } else if (btn.dataset.action === 'percent') {
+          resetIfEgg();
+          current = String(parseFloat(current) / 100);
+          update();
+        }
+      });
+
+      update();
+    }
+
+    // Calculator 1: 3 x 3 shows a monkey
+    buildCalculator(
+      document.getElementById('calc1'),
+      'jungle',
+      { op: '*', a: 3, b: 3, result: '🐒', style: 'egg-monkey' }
+    );
+
+    // Calculator 2: 1 + 1 exposes landy
+    buildCalculator(
+      document.getElementById('calc2'),
+      'robot',
+      { op: '+', a: 1, b: 1, result: 'landy is a bot', style: 'egg-text' }
+    );
+  </script>
+</body>
+</html>
