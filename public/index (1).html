@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>100 Calculators</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 12px;
+    }
+
+    h1 {
+      color: #fff;
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    /* Each calculator gets its own --h (hue) variable set by JavaScript.
+       All colors below are derived from that one hue, so every calculator
+       is a different color but stays readable. */
+    .calc {
+      background: hsl(var(--h), 70%, 92%);
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    }
+
+    .display {
+      background: #fff;
+      border: 1px solid hsl(var(--h), 50%, 80%);
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-bottom: 8px;
+      text-align: right;
+    }
+
+    .history {
+      min-height: 12px;
+      font-size: 9px;
+      color: hsl(var(--h), 30%, 55%);
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .current {
+      font-size: 18px;
+      font-weight: 600;
+      color: hsl(var(--h), 60%, 20%);
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    .calc button {
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #fff;
+      color: hsl(var(--h), 60%, 20%);
+      border: 1px solid hsl(var(--h), 50%, 82%);
+      transition: transform 0.05s ease;
+    }
+
+    .calc button:hover { background: hsl(var(--h), 70%, 88%); }
+    .calc button:active { transform: scale(0.94); }
+
+    .calc button.op {
+      background: hsl(var(--h), 65%, 45%);
+      color: #fff;
+      border: none;
+    }
+
+    .calc button.util {
+      background: hsl(var(--h), 45%, 78%);
+      border: none;
+    }
+
+    .calc button.equals {
+      background: hsl(var(--h), 75%, 32%);
+      color: #fff;
+      border: none;
+      grid-column: span 2;
+    }
+  </style>
+</head>
+<body>
+  <h1>100 CALCULATORS</h1>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const OP_SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+    function compute(a, op, b) {
+      a = parseFloat(a); b = parseFloat(b);
+      let r;
+      switch (op) {
+        case '+': r = a + b; break;
+        case '-': r = a - b; break;
+        case '*': r = a * b; break;
+        case '/': if (b === 0) return 'Error'; r = a / b; break;
+      }
+      return String(Math.round(r * 1e10) / 1e10);
+    }
+
+    // Builds ONE fully working calculator with its own private state,
+    // and returns the DOM element. Called 100 times below.
+    function createCalculator(hue) {
+      const calc = document.createElement('div');
+      calc.className = 'calc';
+      calc.style.setProperty('--h', hue);
+
+      calc.innerHTML = `
+        <div class="display">
+          <div class="history"></div>
+          <div class="current">0</div>
+        </div>
+        <div class="keys">
+          <button class="util" data-action="clear">C</button>
+          <button class="util" data-action="delete">⌫</button>
+          <button class="util" data-action="percent">%</button>
+          <button class="op" data-op="/">÷</button>
+          <button data-num="7">7</button>
+          <button data-num="8">8</button>
+          <button data-num="9">9</button>
+          <button class="op" data-op="*">×</button>
+          <button data-num="4">4</button>
+          <button data-num="5">5</button>
+          <button data-num="6">6</button>
+          <button class="op" data-op="-">−</button>
+          <button data-num="1">1</button>
+          <button data-num="2">2</button>
+          <button data-num="3">3</button>
+          <button class="op" data-op="+">+</button>
+          <button data-num="0">0</button>
+          <button data-num=".">.</button>
+          <button class="equals" data-action="equals">=</button>
+        </div>
+      `;
+
+      const historyEl = calc.querySelector('.history');
+      const currentEl = calc.querySelector('.current');
+
+      // Private state — each calculator remembers its own numbers
+      let current = '0', previous = null, operator = null, justEvaluated = false;
+
+      function update() {
+        currentEl.textContent = current;
+        historyEl.textContent =
+          previous !== null && operator ? `${previous} ${OP_SYMBOLS[operator]}` : '';
+      }
+
+      calc.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+
+        if (btn.dataset.num !== undefined) {
+          const d = btn.dataset.num;
+          if (justEvaluated) { current = '0'; justEvaluated = false; }
+          if (d === '.') {
+            if (!current.includes('.')) current += '.';
+          } else {
+            current = current === '0' ? d : current + d;
+          }
+          update();
+        } else if (btn.dataset.op) {
+          if (operator && previous !== null && !justEvaluated) {
+            current = compute(previous, operator, current);
+          }
+          previous = current === 'Error' ? '0' : current;
+          operator = btn.dataset.op;
+          current = '0';
+          justEvaluated = false;
+          update();
+          currentEl.textContent = previous;
+        } else if (btn.dataset.action === 'equals') {
+          if (operator === null || previous === null) return;
+          const expr = `${previous} ${OP_SYMBOLS[operator]} ${current} =`;
+          current = compute(previous, operator, current);
+          previous = null; operator = null; justEvaluated = true;
+          update();
+          historyEl.textContent = expr;
+        } else if (btn.dataset.action === 'clear') {
+          current = '0'; previous = null; operator = null; justEvaluated = false;
+          update();
+        } else if (btn.dataset.action === 'delete') {
+          if (justEvaluated) { current = '0'; justEvaluated = false; }
+          else current = current.length > 1 ? current.slice(0, -1) : '0';
+          update();
+        } else if (btn.dataset.action === 'percent') {
+          current = String(parseFloat(current) / 100);
+          update();
+        }
+      });
+
+      update();
+      return calc;
+    }
+
+    // Make 100 of them. Hues are spread evenly around the color wheel
+    // (360° / 100 = 3.6° apart) so every single one is a different color.
+    const grid = document.getElementById('grid');
+    for (let i = 0; i < 100; i++) {
+      grid.appendChild(createCalculator(Math.round(i * 3.6)));
+    }
+  </script>
+</body>
+</html>
