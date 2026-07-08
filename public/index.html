@@ -12,21 +12,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #1B2A41;
+      background: #4A1230; /* deep raspberry backdrop */
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
 
     .calculator {
       width: 320px;
-      background: #F7F8F6;
+      background: #FFF0F5; /* soft blush */
       border-radius: 16px;
       padding: 20px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
     }
 
     .display {
       background: #FFFFFF;
-      border: 1px solid #D8DDE3;
+      border: 1px solid #F3C6D8;
       border-radius: 10px;
       padding: 14px 16px;
       margin-bottom: 16px;
@@ -36,14 +36,14 @@
     .history {
       min-height: 18px;
       font-size: 13px;
-      color: #8A93A0;
+      color: #C48BA5;
       font-variant-numeric: tabular-nums;
     }
 
     .current {
       font-size: 34px;
       font-weight: 600;
-      color: #1B2A41;
+      color: #4A1230;
       font-variant-numeric: tabular-nums;
       word-wrap: break-word;
       line-height: 1.2;
@@ -63,40 +63,41 @@
       border-radius: 10px;
       cursor: pointer;
       background: #FFFFFF;
-      color: #1B2A41;
-      border: 1px solid #D8DDE3;
+      color: #4A1230;
+      border: 1px solid #F3C6D8;
       transition: transform 0.05s ease, background 0.1s ease;
     }
 
-    button:hover { background: #EEF1F4; }
+    button:hover { background: #FFE1EC; }
     button:active { transform: scale(0.96); }
 
     button.op {
-      background: #235789;
+      background: #E75480; /* hot pink operators */
       color: #FFFFFF;
       border: none;
     }
-    button.op:hover { background: #1C4770; }
+    button.op:hover { background: #D13F6C; }
 
     button.util {
-      background: #D8DDE3;
+      background: #F3C6D8; /* dusty pink utilities */
+      color: #4A1230;
       border: none;
     }
-    button.util:hover { background: #C7CED6; }
+    button.util:hover { background: #EBB2CA; }
 
     button.equals {
-      background: #2E6E4E;
+      background: #C2185B; /* deep magenta equals */
       color: #FFFFFF;
       border: none;
       grid-column: span 2;
     }
-    button.equals:hover { background: #255C41; }
+    button.equals:hover { background: #A5124C; }
 
     .footer {
       margin-top: 14px;
       text-align: center;
       font-size: 11px;
-      color: #8A93A0;
+      color: #C48BA5;
       letter-spacing: 0.04em;
     }
   </style>
